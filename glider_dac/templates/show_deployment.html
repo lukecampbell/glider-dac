@@ -120,7 +120,14 @@
         });
 
         req.fail(function(jqxhr, textStatus, error) {
-          $('#dropbox-error').fadeIn(250).text("Could not upload file: " + error);
+          if(jqxhr.status == 400) {
+            $('#dropbox-error').fadeIn(250).text("Could not upload file: " + jqxhr.responseJSON.error);
+            console.error(jqxhr);
+            console.error(textStatus);
+            console.error(error);
+          } else {
+            $('#dropbox-error').fadeIn(250).text("Could not upload file: " + error);
+          }
         });
 
         req.done(function(data) {
@@ -128,8 +135,9 @@
           replaces.forEach(function(v) {
             $('#deployment-files tbody tr td:contains("' + v + '")').parents('tr').remove();
           });
+          var template = _.template($('#file-upload-row').html());
 
-          $('tbody').prepend(data);
+          $('tbody').prepend(template({filename: data.files[0][0]}));
         });
 
       });
@@ -293,5 +301,11 @@
 
 </div>
 
-
+<script type="text/html" id="file-upload-row">
+<tr>
+  <td><input type="checkbox" /></td>
+  <td><%= filename %> </td>
+  <td>Just Now</td>
+</tr>
+</script>
 {% endblock %}

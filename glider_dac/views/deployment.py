@@ -190,12 +190,17 @@ def post_deployment_file(username, deployment_id):
     if not (deployment and user and deployment.user_id == user._id and (current_user.is_admin() or current_user == user)):
         raise StandardError("Unauthorized") # @TODO better response via ajax?
 
+    deployment_name = deployment.name
+
     retval = []
     for name, f in request.files.iteritems():
         if not name.startswith('file-'):
             continue
 
         safe_filename = f.filename # @TODO
+        if not safe_filename.startswith(deployment.glider_name):
+            return jsonify(error='Invalid filename: file names must start with the glider name'), 400
+
 
         out_name = os.path.join(deployment.full_path, safe_filename)
 
@@ -206,7 +211,7 @@ def post_deployment_file(username, deployment_id):
 
     editable = current_user and current_user.is_active() and (current_user.is_admin() or current_user == user)
 
-    return render_template("_deployment_files.html", files=retval, editable=editable)
+    return jsonify(files=retval, editable=editable)
 
 @app.route('/users/<string:username>/deployment/<ObjectId:deployment_id>/delete_files', methods=['POST'])
 @login_required
